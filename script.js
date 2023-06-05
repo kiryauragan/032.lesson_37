@@ -1,6 +1,7 @@
 const categoriesContainer = document.querySelector(".categories");
 const productsContainer = document.querySelector(".products");
 const productDetailsContainer = document.querySelector(".product-detail");
+const dataTable = document.getElementById("dataTable");
 
 const categories = [
   { id: 1, name: "Спорт" },
@@ -64,9 +65,7 @@ const renderProductDetails = (product) => {
   productDetailsElement
     .querySelector(".btn_buy")
     .addEventListener("click", () => {
-      const orderForm = document.querySelector(".orderForm");
-      orderForm.style.display = "block";
-      dataTable.style.display = "block";
+      showOrderForm();
     });
   productDetailsContainer.appendChild(productDetailsElement);
 };
@@ -87,6 +86,7 @@ function addDataToTable() {
   let paymentCell = newRow.insertCell();
   let quantityCell = newRow.insertCell();
   let commentCell = newRow.insertCell();
+  let deleteCell = newRow.insertCell();
 
   nameCell.innerHTML = name;
   cityCell.innerHTML = city;
@@ -94,6 +94,7 @@ function addDataToTable() {
   paymentCell.innerHTML = payment;
   quantityCell.innerHTML = quantity;
   commentCell.innerHTML = comment;
+  deleteCell.innerHTML = `<button class="btnDelete">Удалить</button>`;
 
   document.getElementById("username").value = "";
   document.getElementById("city").value = "";
@@ -101,15 +102,113 @@ function addDataToTable() {
   document.getElementById("payment-method").value = "";
   document.getElementById("quantity").value = "";
   document.getElementById("comment").value = "";
+
+  addDeleteEventListener(deleteCell);
 }
 
-const orderForm = document.querySelector(".orderForm");
-orderForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  addDataToTable();
-  orderForm.reset();
-});
+function addDeleteEventListener(cell) {
+  const deleteButton = cell.querySelector(".btnDelete");
+  deleteButton.addEventListener("click", () => {
+    const rowIndex = cell.parentNode.rowIndex;
+    deleteOrder(rowIndex);
+  });
+}
 
-renderCategories();
-renderProducts();
-renderProductDetails();
+function saveOrderToLocalStorage(order) {
+  let orders = JSON.parse(localStorage.getItem("orders")) || [];
+  orders.push(order);
+  localStorage.setItem("orders", JSON.stringify(orders));
+}
+
+function getOrdersFromLocalStorage() {
+  return JSON.parse(localStorage.getItem("orders")) || [];
+}
+
+function renderOrders() {
+  const orders = getOrdersFromLocalStorage();
+  const table = document.getElementById("dataTable");
+  table.innerHTML = "";
+
+  orders.forEach((order) => {
+    const newRow = table.insertRow();
+    const nameCell = newRow.insertCell();
+    const cityCell = newRow.insertCell();
+    const postOfficeCell = newRow.insertCell();
+    const paymentCell = newRow.insertCell();
+    const quantityCell = newRow.insertCell();
+    const commentCell = newRow.insertCell();
+    const deleteCell = newRow.insertCell();
+
+    nameCell.innerHTML = order.username;
+    cityCell.innerHTML = order.city;
+    postOfficeCell.innerHTML = order.postOffice;
+    paymentCell.innerHTML = order.payment;
+    quantityCell.innerHTML = order.quantity;
+    commentCell.innerHTML = order.comment;
+    deleteCell.innerHTML = `<button class="btnDelete">Удалить</button>`;
+
+    addDeleteEventListener(deleteCell);
+  });
+}
+
+function showOrderForm() {
+  const orderForm = document.querySelector(".orderForm");
+  orderForm.style.display = "block";
+  dataTable.style.display = "block";
+  renderOrders();
+}
+
+function showOrderList() {
+  const orderForm = document.querySelector(".orderForm");
+  orderForm.style.display = "none";
+  dataTable.style.display = "block";
+  renderOrders();
+}
+
+function deleteOrder(index) {
+  const orders = getOrdersFromLocalStorage();
+  orders.splice(index - 1, 1);
+  localStorage.setItem("orders", JSON.stringify(orders));
+  renderOrders();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const myForm = document.getElementById("myForm");
+  const btnOrder = document.getElementById("submit");
+  const myOrdersBtn = document.createElement("button");
+  myOrdersBtn.innerText = "Мои заказы";
+  myOrdersBtn.addEventListener("click", showOrderList);
+
+  document.body.insertBefore(
+    myOrdersBtn,
+    document.querySelector(".categories")
+  );
+
+  myForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const username = document.getElementById("username").value;
+    const city = document.getElementById("city").value;
+    const postOffice = document.getElementById("post-office").value;
+    const payment = document.getElementById("payment-method").value;
+    const quantity = document.getElementById("quantity").value;
+    const comment = document.getElementById("comment").value;
+
+    const order = {
+      username,
+      city,
+      postOffice,
+      payment,
+      quantity,
+      comment,
+    };
+
+    addDataToTable();
+    saveOrderToLocalStorage(order);
+    myForm.reset();
+  });
+
+  renderCategories();
+  renderProducts();
+  renderProductDetails();
+});
