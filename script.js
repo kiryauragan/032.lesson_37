@@ -3,6 +3,7 @@ const productsContainer = document.querySelector(".products");
 const productDetailsContainer = document.querySelector(".product-detail");
 const dataTable = document.getElementById("dataTable");
 
+
 const categories = [
   { id: 1, name: "Спорт" },
   { id: 2, name: "Косметика" },
